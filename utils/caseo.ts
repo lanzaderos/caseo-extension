@@ -76,6 +76,10 @@ const FIELDS: Record<string, string> = {
   listing_url: "Anuncio",
   name: "Título",
   rent: "Precio",
+  sale_price: "Precio",
+  street: "Calle",
+  municipality: "Municipio",
+  province: "Provincia",
   location: "Ubicación",
   area_m2: "Superficie",
 };
