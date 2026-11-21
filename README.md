@@ -38,3 +38,7 @@ npm run build:firefox
 ```
 
 Los tests (`npm test`) cubren la detección de fichas y la extracción de fotos. La interpretación de los datos se prueba en Caseo, con anuncios reales.
+
+## Licencia
+
+Caseo Extension se distribuye bajo la [GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0-only).

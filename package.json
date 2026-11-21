@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "Importa anuncios inmobiliarios a Caseo.",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
     "dev": "wxt",
