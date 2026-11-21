@@ -1,17 +1,16 @@
 import { useEffect, useState, type FormEvent } from "react";
 
 import {
+  createImport,
   disconnect,
-  importListing,
   me,
   originPattern,
   parseServerUrl,
   serverUrl,
   token,
   Unauthorized,
-  type ImportResult,
 } from "@/utils/caseo";
-import { listingId, readListingFromPage, toListing } from "@/utils/idealista";
+import { listingId, readListingFromPage } from "@/utils/idealista";
 
 type Tab = Browser.tabs.Tab;
 
@@ -21,11 +20,7 @@ type View =
   | { name: "login"; server: string }
   | { name: "ready"; server: string; email: string; tab?: Tab };
 
-type Status =
-  | { kind: "idle" }
-  | { kind: "importing" }
-  | { kind: "done"; result: ImportResult }
-  | { kind: "error"; message: string };
+type Status = { kind: "idle" } | { kind: "importing" } | { kind: "error"; message: string };
 
 async function loadView(): Promise<View> {
   const server = await serverUrl.getValue();
@@ -147,8 +142,9 @@ function Import(props: { email: string; tab?: Tab; onDisconnect: () => void }) {
       });
       if (!injection?.result) throw new Error("No se pudieron leer los datos del anuncio.");
 
-      const result = await importListing(toListing(injection.result, tab.url));
-      setStatus({ kind: "done", result });
+      // Caseo abre la vista previa editable: allí se revisa, se completa y se confirma.
+      await browser.tabs.create({ url: await createImport(injection.result) });
+      window.close();
     } catch (error) {
       if (error instanceof Unauthorized) return onDisconnect();
       setStatus({ kind: "error", message: error instanceof Error ? error.message : String(error) });
@@ -173,16 +169,6 @@ function Import(props: { email: string; tab?: Tab; onDisconnect: () => void }) {
         </p>
       )}
 
-      {status.kind === "done" && (
-        <div role="alert" className="alert alert-success alert-soft text-sm">
-          <span>
-            {status.result.result === "created" ? "Inmueble creado" : "Inmueble actualizado"}:{" "}
-            <a className="link" href={status.result.url} target="_blank" rel="noreferrer">
-              {status.result.name}
-            </a>
-          </span>
-        </div>
-      )}
       {status.kind === "error" && (
         <div role="alert" className="alert alert-error alert-soft text-sm">
           <span>No se pudo importar. {status.message}</span>

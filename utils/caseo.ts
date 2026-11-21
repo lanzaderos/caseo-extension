@@ -1,6 +1,6 @@
 import { storage } from "#imports";
 
-import type { Listing } from "./idealista.ts";
+import type { RawListing } from "./idealista.ts";
 
 /** Origen del servidor de Caseo, por ejemplo `https://caseo.midominio.com`. */
 export const serverUrl = storage.defineItem<string | null>("local:serverUrl", { fallback: null });
@@ -54,35 +54,25 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 export const me = () => request<{ email: string }>("/api/extension/me");
 
-export interface ImportResult {
-  id: number;
-  name: string;
-  result: "created" | "updated";
-  url: string;
+/**
+ * Guarda el anuncio como importación pendiente y devuelve la URL de la vista
+ * previa, siempre en el servidor configurado (Caseo solo devuelve la ruta).
+ */
+export async function createImport(listing: RawListing): Promise<string> {
+  const { preview_path } = await request<{ id: number; preview_path: string }>(
+    "/api/extension/imports",
+    { method: "POST", body: JSON.stringify(listing) },
+  );
+  const server = await serverUrl.getValue();
+  return new URL(preview_path, server ?? undefined).href;
 }
-
-export const importListing = (listing: Listing) =>
-  request<ImportResult>("/api/extension/listings", {
-    method: "POST",
-    body: JSON.stringify(listing),
-  });
 
 export async function disconnect() {
   await request("/api/extension/session", { method: "DELETE" }).catch(() => undefined);
   await token.removeValue();
 }
 
-const FIELDS: Record<string, string> = {
-  listing_url: "Anuncio",
-  name: "Título",
-  rent: "Precio",
-  sale_price: "Precio",
-  street: "Calle",
-  municipality: "Municipio",
-  province: "Provincia",
-  location: "Ubicación",
-  area_m2: "Superficie",
-};
+const FIELDS: Record<string, string> = { url: "Anuncio" };
 
 function errorMessage(body: unknown): string | null {
   const errors = (body as { errors?: Record<string, string[]> } | null)?.errors;
